@@ -10,13 +10,52 @@ const getUserByUserName = (username, callback) => {
 };
 
 
-const getAllUsers = (callback) =>{
-    const sql = 'SELECT * from tbl_admin where fld_admin_type != ?';
-    db.query(sql, ['SUPERADMIN'] , (err, results) => {
-        if(err) return callback(err, null);
-        return callback(null, results);
-    })
-}
+
+
+const getAllUsers = (filters, callback) => {
+  let sql = "SELECT * FROM tbl_admin WHERE fld_admin_type != 'SUPERADMIN'";
+  const params = [];
+
+  // Filter by usertype if provided
+  if (filters.usertype.length > 0) {
+    sql += " AND fld_admin_type IN (" + filters.usertype.map(() => "?").join(",") + ")";
+    params.push(...filters.usertype.map(type => type.toUpperCase()));
+  }
+
+  // Filter by keyword
+  if (filters.keyword && filters.keyword !== "") {
+    sql += " AND (fld_name LIKE ? OR fld_email LIKE ?)";
+    const search = `%${filters.keyword}%`;
+    params.push(search, search);
+  }
+
+  db.query(sql, params, (err, results) => {
+    if (err) return callback(err, null);
+    return callback(null, results);
+  });
+};
+
+const getUserCount = (callback) => {
+  const sql = `
+    SELECT fld_admin_type, COUNT(*) as count 
+    FROM tbl_admin 
+    WHERE fld_admin_type IN ('EXECUTIVE', 'SUBADMIN', 'CONSULTANT', 'OPERATIONSADMIN')
+    GROUP BY fld_admin_type
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) return callback(err, null);
+
+    // Convert array to object: { EXECUTIVE: 5, SUBADMIN: 3, ... }
+    const counts = {};
+    results.forEach(row => {
+      counts[row.fld_admin_type] = row.count;
+    });
+
+    return callback(null, counts);
+  });
+};
+
 
 const getAllUsersIncludingAdmin = (callback) =>{
     const sql = 'SELECT * from tbl_admin';
@@ -58,6 +97,7 @@ const deleteUser = (id, callback) => {
 module.exports = {
     getUserByUserName,
     getAllUsers,
+    getUserCount,
     getAllUsersIncludingAdmin,
     addUser,
     updateUser,

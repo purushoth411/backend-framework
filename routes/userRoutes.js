@@ -4,7 +4,9 @@ const userController = require('../controllers/userController');
 
 // POST /api/users/login
 router.post('/login', userController.loginUser);
-router.get('/all', userController.getAllUsers);
+router.post('/getallusers', userController.getAllUsers);
+router.get('/getusercount', userController.getUserCount);
+
 router.get('/allusers', userController.getAllUsersIncludingAdmin);
 
 

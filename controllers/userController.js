@@ -22,15 +22,32 @@ const loginUser = (req, res) => {
 };
 
 
-const getAllUsers = (req, res) =>{
-    userModel.getAllUsers((err, users) => {
-        if(err){
-           return res.status(500).json({status : false, message : "an error occured" + err})
-        }
 
-        return res.json({status: true, message : "Success" , data: users})
-    })
-}
+
+
+
+const getAllUsers = (req, res) => {
+  const filters = req.body.filters || {};
+  
+
+  userModel.getAllUsers(filters, (err, users) => {
+    if (err) {
+      return res.status(500).json({ status: false, message: "Error: " + err });
+    }
+
+    return res.json({ status: true, message: "Success", data: users });
+  });
+};
+
+const getUserCount = (req, res) => {
+  userModel.getUserCount((err, counts) => {
+    if (err) {
+      return res.status(500).json({ status: false, message: 'Error: ' + err });
+    }
+    return res.json({ status: true, data: counts });
+  });
+};
+
 
 const getAllUsersIncludingAdmin = (req, res) =>{
     userModel.getAllUsersIncludingAdmin((err, users) => {
@@ -97,6 +114,7 @@ const deleteUser = (req, res) => {
 module.exports = {
     loginUser,
     getAllUsers,
+    getUserCount,
     getAllUsersIncludingAdmin,
     addUser,
     updateUser,
